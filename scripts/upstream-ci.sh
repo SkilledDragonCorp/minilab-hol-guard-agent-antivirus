@@ -19,8 +19,13 @@ rm -rf vendor/hol-guard
 git clone https://github.com/hashgraph-online/hol-guard.git vendor/hol-guard
 cd vendor/hol-guard
 git checkout 759302e90a88201b262bcd6fe5202b001da8f36c
+# From native-command-evaluators at 759302e90a88: trust refresh → release
+# build → verify/stage generated catalogs (required before export).
 python3 scripts/refresh_extension_artifacts.py --trust-only
 cargo build --manifest-path rust/Cargo.toml --locked --release -p guard-command -p hol-guard-runtime --bin guard-command-source --bin hol-guard-runtime
+python3 scripts/ci/verify_native_command_program.py --compiler rust/target/release/guard-command-source
+# From ci-job-compatibility/action.yml at the same pin (uv sync + export +
+# pytest cohort). Export needs the catalogs staged by verify above.
 uv sync --frozen --no-dev --group ci-test --python 3.13
 uv run --no-sync python scripts/export_extension_directory.py
 uv run --no-sync python scripts/render_command_extension_directory.py
